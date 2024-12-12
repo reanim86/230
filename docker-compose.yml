@@ -1,0 +1,15 @@
+version: '3.9'
+
+volumes:
+  pgdata:
+
+services:
+
+  postgre:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "sms"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    ports:
+      - "5432:5432"
