@@ -11,8 +11,8 @@ def get_data():
     yesterday = date.today() - timedelta(days=1)
     params = {
                 'get_messages': 1,
-                'login': 'vdm',
-                'psw': 'UtyidzoyHicsi2I',
+                'login': '1',
+                'psw': '1',
                 # 'start': yesterday.strftime('%d.%m.%Y'),
                 # 'end': yesterday.strftime('%d.%m.%Y'),
                 'start': '13.12.2024',
