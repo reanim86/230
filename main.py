@@ -2,8 +2,9 @@ import requests
 import psycopg
 from pprint import pprint
 from datetime import date, timedelta, datetime
+import configparser
 
-def get_data():
+def get_data(sms_login, sms_pass):
     """
     Запрос истории отправко смс за вчерашний день
     :return: список с смс
@@ -11,8 +12,8 @@ def get_data():
     yesterday = date.today() - timedelta(days=1)
     params = {
                 'get_messages': 1,
-                'login': '1',
-                'psw': '1',
+                'login': sms_login,
+                'psw': sms_pass,
                 # 'start': yesterday.strftime('%d.%m.%Y'),
                 # 'end': yesterday.strftime('%d.%m.%Y'),
                 'start': '13.12.2024',
@@ -40,10 +41,14 @@ def create_record(message):
     return
 
 if __name__ == '__main__':
-    data = get_data()
-    # create_record(data)
+    config = configparser.ConfigParser()
+    config.read('settings.ini')
+    login = config['sms']['login']
+    password = config['sms']['pass']
+    data = get_data(login, password)
+    create_record(data)
     # yesterday = date.today() - timedelta(days=1)
-    pprint(data[0])
+    # pprint(data[0])
 
 
 
