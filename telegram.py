@@ -14,4 +14,4 @@ def send_mes_telebot(messege, chat):
 
 config = configparser.ConfigParser()
 config.read('settings.ini')
-token = config['Tg']['token']
+token = config['Tg']['token'] #Прописать токен
