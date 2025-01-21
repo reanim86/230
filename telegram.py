@@ -8,8 +8,7 @@ def send_mes_telebot(messege, chat):
     :param chat: id чата
     """
     bot = telebot.TeleBot(token)
-    text = f'По МКК ВДМ добалвено {messege} строк'
-    bot.send_message(chat, text)
+    bot.send_message(chat, messege)
     return
 
 config = configparser.ConfigParser()
