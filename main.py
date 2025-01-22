@@ -16,10 +16,10 @@ def get_data(sms_login, sms_pass): # Очистить скобки
                 'get_messages': 1,
                 'login': sms_login, # Заменить в ВДМ
                 'psw': sms_pass, # Заменить в ВДМ
-                # 'start': '14.12.2024', # раскоментить в ВДМ
-                # 'end': '14.12.2024', # раскоментить в ВДМ
-                'start': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
-                'end': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
+                'start': '20.01.2025', # раскоментить в ВДМ
+                'end': '20.01.2025', # раскоментить в ВДМ
+                # 'start': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
+                # 'end': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
                 'cnt': 1000,
                 'fmt': 3
             }
@@ -82,14 +82,20 @@ with psycopg.connect(dbname='sms', user='postgres', password='postgres') as conn
         count_before = count_record()
         data = get_data(login, password) # Убрать данные
         chat_id = '-4700701967'
-        create_csv(data)
-        text = 'Файл для отправки смс ВДМ создан' # Исправить организацию
-        send_mes_telebot(text, chat_id)
-        create_record(data)
-        count_after = count_record()
-        count_added = count_after - count_before
-        text = f'По МКК ВДМ добалвено {count_added} строк' # Исправить организацию
-        send_mes_telebot(text, chat_id)
+        org = 'ДВМ'  # Исправить организацию
+        if data['error']:
+            text = f'По организации {org} за {date.today() - timedelta(days=1)} сообщений не было'
+            send_mes_telebot(text, chat_id)
+            print('Нет сообщений')
+        else:
+            create_csv(data)
+            text = f'Файл для отправки смс {org} создан'
+            send_mes_telebot(text, chat_id)
+            create_record(data)
+            count_after = count_record()
+            count_added = count_after - count_before
+            text = f'По МКК {org} добалвено {count_added} строк'
+            send_mes_telebot(text, chat_id)
 conn.close()
 
 
