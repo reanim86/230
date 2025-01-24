@@ -11,6 +11,17 @@ def send_mes_telebot(messege, chat):
     bot.send_message(chat, messege)
     return
 
+def send_file_telebot(file, chat):
+    """
+    Отправка файла в телеграм с помощь. бота
+    :param file: путь к файлу
+    :param chat: id чата
+    """
+    bot = telebot.TeleBot(token)
+    f = open(file, "rb")
+    bot.send_document(chat, f)
+    return
+
 config = configparser.ConfigParser()
 config.read('settings.ini')
 token = config['Tg']['token'] #Прописать токен
