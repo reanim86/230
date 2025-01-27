@@ -16,8 +16,8 @@ def get_data(sms_login, sms_pass): # Очистить скобки
                 'get_messages': 1,
                 'login': sms_login, # Заменить в ВДМ
                 'psw': sms_pass, # Заменить в ВДМ
-                'start': '16.01.2025', # раскоментить в ВДМ
-                'end': '16.01.2025', # раскоментить в ВДМ
+                'start': '25.01.2025', # раскоментить в ВДМ
+                'end': '25.01.2025', # раскоментить в ВДМ
                 # 'start': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
                 # 'end': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
                 'cnt': 1000,
@@ -82,54 +82,68 @@ def undelivered_message(messages):
     for message in messages:
         if message['status_name'] != 'Доставлено':
             messages_list.append(message)
-        if not messages_list:
-            return 'нет недоставленных сообщений'
+    if not messages_list:
+        return 'нет недоставленных сообщений'
     keys = messages_list[0].keys()
+    bad_messages_list = []
+    for message in messages_list:
+        if keys != message.keys():    # Проверка совпадения ключей в ответе от smsc
+            keys_one = set(message.keys()) # Преобразуем ключи в set
+            keys_two = set(keys)
+            same_keys = keys_one.difference(keys_two) # Выявлем лишний ключ
+            if len(same_keys) == 0: # Если его нет, то добавляем ключ которго нет с нулевым значением
+                keys_same = keys_two.difference(keys_one)
+                message[''.join(keys_same)] = 0
+            else:
+                del message[''.join(same_keys)]
+            bad_messages_list.append(message)
+        else:
+            bad_messages_list.append(message)
     with open(f'C://reestr/undelivered/{org}_{date.today() - timedelta(days=1)}.csv', 'w', newline='') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
-        dict_writer.writerows(messages_list)
+        dict_writer.writerows(bad_messages_list)
     return f'C://reestr/undelivered/{org}_{date.today() - timedelta(days=1)}.csv'
 
 
 
-with psycopg.connect(dbname='sms', user='postgres', password='postgres') as conn:
-    if __name__ == '__main__':
-        config = configparser.ConfigParser() #  В ВДМ строку заккоментировать
-        config.read('settings.ini') #  В ВДМ строку заккоментировать
-        login = config['sms']['login'] #  В ВДМ строку заккоментировать
-        password = config['sms']['pass'] #  В ВДМ строку заккоментировать
-        count_before = count_record()
-        data = get_data(login, password) # Убрать данные
-        # pprint(data)
-        chat_id = '-4700701967'
-        chat_bad_sms = '-4671413664'
-        org = 'ДВМ'  # Исправить организацию
-        if type(data) is dict:
-            if data['error_code'] == 3:
-                text = f'По организации {org} за {date.today() - timedelta(days=1)} сообщений не было'
-                send_mes_telebot(text, chat_id)
-                send_mes_telebot(text, chat_bad_sms)
-            else:
-                text = f'По организации {org} ошибка: {data}, см. описание ошибок на сайте smsc.ru в разделе API'
-                send_mes_telebot(text, chat_id)
-                send_mes_telebot(text, chat_bad_sms)
-        else:
-            create_csv(data)
-            text = f'Файл для отправки смс {org} создан'
+
+if __name__ == '__main__':
+    config = configparser.ConfigParser() #  В ВДМ строку заккоментировать
+    config.read('settings.ini') #  В ВДМ строку заккоментировать
+    login = config['sms']['login'] #  В ВДМ строку заккоментировать
+    password = config['sms']['pass'] #  В ВДМ строку заккоментировать
+    data = get_data(login, password) # Убрать данные
+    chat_id = '-4700701967'
+    chat_bad_sms = '-4671413664'
+    org = 'НФП'  # Исправить организацию
+    if type(data) is dict: # Проверка были ли вообще отправленные сообщения, если были сообщения то вернется список
+        if data['error_code'] == 3:
+            text = f'По организации {org} за {date.today() - timedelta(days=1)} сообщений не было'
             send_mes_telebot(text, chat_id)
+            send_mes_telebot(text, chat_bad_sms)
+        else:
+            text = f'По организации {org} ошибка: {data}, см. описание ошибок на сайте smsc.ru в разделе API'
+            send_mes_telebot(text, chat_id)
+            send_mes_telebot(text, chat_bad_sms)
+    else:
+        create_csv(data)
+        text = f'Файл для отправки смс {org} создан'
+        send_mes_telebot(text, chat_id)
+        with psycopg.connect(dbname='sms', user='postgres', password='postgres') as conn:
+            count_before = count_record()
             create_record(data)
             count_after = count_record()
-            count_added = count_after - count_before
-            text = f'По МКК {org} добавлено {count_added} строк'
-            send_mes_telebot(text, chat_id)
-            bad_csv = undelivered_message(data)
-            if bad_csv == 'нет недоставленных сообщений':
-                text = f'По организации {org} ' + bad_csv
-                send_mes_telebot(text, chat_bad_sms)
-            else:
-                send_file_telebot(bad_csv, chat_bad_sms)
-conn.close()
+        conn.close()
+        count_added = count_after - count_before
+        text = f'По МКК {org} добавлено {count_added} строк'
+        send_mes_telebot(text, chat_id)
+        bad_csv = undelivered_message(data)
+        if bad_csv == 'нет недоставленных сообщений':
+            text = f'По организации {org} ' + bad_csv
+            send_mes_telebot(text, chat_bad_sms)
+        else:
+            send_file_telebot(bad_csv, chat_bad_sms)
 
 
 
