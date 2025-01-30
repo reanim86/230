@@ -16,10 +16,10 @@ def get_data(sms_login, sms_pass): # Очистить скобки
                 'get_messages': 1,
                 'login': sms_login, # Заменить в ВДМ
                 'psw': sms_pass, # Заменить в ВДМ
-                'start': '25.01.2025', # раскоментить в ВДМ
-                'end': '25.01.2025', # раскоментить в ВДМ
-                # 'start': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
-                # 'end': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
+                # 'start': '25.01.2025', # раскоментить в ВДМ
+                # 'end': '25.01.2025', # раскоментить в ВДМ
+                'start': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
+                'end': yesterday.strftime('%d.%m.%Y'), #  В ВДМ строку заккоментировать
                 'cnt': 1000,
                 'fmt': 3
             }
@@ -90,12 +90,14 @@ def undelivered_message(messages):
         if keys != message.keys():    # Проверка совпадения ключей в ответе от smsc
             keys_one = set(message.keys()) # Преобразуем ключи в set
             keys_two = set(keys)
-            same_keys = keys_one.difference(keys_two) # Выявлем лишний ключ
-            if len(same_keys) == 0: # Если его нет, то добавляем ключ которго нет с нулевым значением
-                keys_same = keys_two.difference(keys_one)
-                message[''.join(keys_same)] = 0
+            same_keys = keys_one.difference(keys_two) # Выявляем лишний ключ
+            if len(same_keys) == 0: # Если его нет, то добавляем ключ которого нет с нулевым значением
+                keys_same = keys_two.difference(keys_one)  # Смотрим разницу исходя из другого вводного условия какой набор ключей явялется заголовком csv файла
+                for bad_key in keys_same: # Перебор на случай если лишних ключей больше одного и их удаление
+                    message[bad_key] = 0
             else:
-                del message[''.join(same_keys)]
+                for bad_key in same_keys: # Перебор на случай если лишних ключей больше одного и их удаление
+                    del message[bad_key]
             bad_messages_list.append(message)
         else:
             bad_messages_list.append(message)
@@ -116,7 +118,7 @@ if __name__ == '__main__':
     data = get_data(login, password) # Убрать данные
     chat_id = '-4700701967'
     chat_bad_sms = '-4671413664'
-    org = 'НФП'  # Исправить организацию
+    org = 'ВДМ'  # Исправить организацию
     if type(data) is dict: # Проверка были ли вообще отправленные сообщения, если были сообщения то вернется список
         if data['error_code'] == 3:
             text = f'По организации {org} за {date.today() - timedelta(days=1)} сообщений не было'
