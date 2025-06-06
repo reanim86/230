@@ -116,7 +116,7 @@ if __name__ == '__main__':
     login = config['sms']['login'] #  В ВДМ строку заккоментировать
     password = config['sms']['pass'] #  В ВДМ строку заккоментировать
     data = get_data(login, password) # Убрать данные
-    chat_id = '-4700701967'
+    chat_id = '-1002637340041'
     chat_bad_sms = '-4671413664'
     org = 'ВДМ'  # Исправить организацию
     if type(data) is dict: # Проверка были ли вообще отправленные сообщения, если были сообщения то вернется список
@@ -129,14 +129,14 @@ if __name__ == '__main__':
             send_mes_telebot(text, chat_id)
             send_mes_telebot(text, chat_bad_sms)
     else:
-        create_csv(data)
-        text = f'Файл для отправки смс {org} создан'
-        send_mes_telebot(text, chat_id)
         with psycopg.connect(dbname='sms', user='postgres', password='postgres') as conn:
             count_before = count_record()
             create_record(data)
             count_after = count_record()
         conn.close()
+        create_csv(data)
+        text = f'Файл для отправки смс {org} создан'
+        send_mes_telebot(text, chat_id)
         count_added = count_after - count_before
         text = f'По МКК {org} добавлено {count_added} строк'
         send_mes_telebot(text, chat_id)
